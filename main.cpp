@@ -1,4 +1,6 @@
 #include <QtGui/QGuiApplication>
+#include <QQmlContext>
+#include "simplesettings.h"
 #include "qtquick2applicationviewer.h"
 
 int main(int argc, char *argv[])
@@ -10,6 +12,8 @@ int main(int argc, char *argv[])
     app.setApplicationName("RR UI");
 
     QtQuick2ApplicationViewer viewer;
+    SimpleSettings settings;
+    viewer.rootContext()->setContextProperty("settings", &settings);
     viewer.setMainQmlFile(QStringLiteral("qml/RRUI/main.qml"));
     viewer.showExpanded();
 
