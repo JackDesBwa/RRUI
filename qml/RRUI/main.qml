@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import RRUI 1.0
 
 Rectangle {
     width: 360
@@ -13,4 +14,6 @@ Rectangle {
             Qt.quit();
         }
     }
+    RRUIData {}
+    RRUIData {}
 }
