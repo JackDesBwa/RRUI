@@ -21,3 +21,5 @@ qtcAddDeployment()
 HEADERS += \
     simplesettings.h \
     rruidata.h
+
+QMAKE_CXXFLAGS += -std=c++11
