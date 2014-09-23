@@ -5,7 +5,7 @@ Rectangle {
     width: 360
     height: 360
     Text {
-        text: qsTr("Hello World")
+        text: mydata.connected_state == 2 ? "Connecté" : "Non connecté"
         anchors.centerIn: parent
     }
     Rectangle {
@@ -33,7 +33,7 @@ Rectangle {
         id: mydata
 
         Component.onCompleted: {
-            this.set_messages_file("");
+            this.set_messages_file("dirty_test/test_data.conf");
             this.connect("localhost", 8000);
         }
     }
