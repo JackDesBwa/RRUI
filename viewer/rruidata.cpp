@@ -15,6 +15,7 @@
     along with RRUI.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <QFile>
 #include <stdint.h>
 #include "rruidata.h"
 
@@ -86,24 +87,119 @@ RRUIData::RRUIData(QObject *parent) : QQmlPropertyMap(this, parent), state(STATE
 void RRUIData::set_messages_file(QString messages_conf) {
     map.clear();
 
-/*
-    We should get configuation from file, starting like this :
+    if (messages_conf.isEmpty()) {
+        qDebug("[RRUIDATA] Configuration filename is empty");
+        return;
+    }
 
     QFile config(messages_conf);
     config.open(QFile::OpenModeFlag::ReadOnly);
-    while (!config.atEnd()) {
-        QString line = config.readLine();
-        qDebug(line.toStdString().c_str());
+    if (!config.isOpen()) {
+        qDebug() << "[RRUIDATA] Configuration file" << messages_conf << "cannot be read";
+        return;
     }
 
-    But for now, we use static configuration :
-*/
-    map.insert(0x07 << 16 | 1, "test_float");
-    map.insert(0x00 << 16 | 2, "test_bool");
+    while (!config.atEnd()) {
+        QString a, b, key, value;
+        int kind, number;
 
-    auto it = map.constBegin();
-    for (; it != map.constEnd(); ++it) {
-        internal_update(it.value(), 0);
+        // Read one line
+        QString line = config.readLine().trimmed();
+        if (line.length() == 0) continue;
+        if (line[0] == '#') continue;
+
+        // Split at first blank
+        int startpos = line.indexOf(QRegExp("[ \t]"));
+        if (startpos != -1) {
+            a = line.left(startpos);
+            b = line.mid(startpos + 1);
+        }
+
+        // Split first part at first dot
+        startpos = a.indexOf(".");
+        if (startpos != -1) {
+            kind = a.left(startpos).toInt();
+            number = a.mid(startpos + 1).toInt();
+            if (kind > 255 || kind < 0) {
+                qDebug("[RRUIDATA] Error, impossible variable kind " + kind);
+                continue;
+            } else if (number > 65535 || number < 0) {
+                qDebug("[RRUIDATA] Error, impossible variable number " + number);
+                continue;
+            }
+        }
+
+        // Split second part at optional equal sign
+        startpos = b.indexOf("=");
+        if (startpos != -1) {
+            key = b.left(startpos);
+            value = b.mid(startpos + 1);
+            int pos2 = value.indexOf(QRegExp("[^ \t]"));
+            if (pos2 != -1) value = value.mid(pos2);
+            pos2 = key.lastIndexOf(QRegExp("[ \t]"));
+            if (pos2 != -1) value = value.left(pos2+1);
+        } else {
+            key = b;
+        }
+
+        // Trim parameter name
+        int pos2 = key.indexOf(QRegExp("[ \t]"));
+        if (pos2 != -1) key = key.mid(pos2);
+        pos2 = key.lastIndexOf(QRegExp("[^ \t]"));
+        if (pos2 != -1) key = key.left(pos2+1);
+
+        // Verify unicity of parameters
+        auto it = map.find(kind << 16 | number);
+        if (it != map.end()) {
+            qDebug((QString("[RRUIDATA] Error, duplicate id ") + kind + '.' + number +
+            " (first one is " + it.value() + ")").toStdString().c_str());
+            continue;
+        }
+
+        // Record values
+        map.insert(kind << 16 | number, key);
+        if (kind == 0) {
+            bool val = false;
+            if (value.compare("on") == 0) val = true;
+            if (value.compare("1") == 0) val = true;
+            if (value.compare("yes") == 0) val = true;
+            internal_update(key, float(val));
+
+        } else if (kind == 1) {
+            int8_t val = 0;
+            val = value.toInt();
+            internal_update(key, float(val));
+
+        } else if (kind == 2) {
+            uint8_t val = 0;
+            val = value.toInt();
+            internal_update(key, float(val));
+
+        } else if (kind == 3) {
+            int16_t val = 0;
+            val = value.toInt();
+            internal_update(key, float(val));
+
+        } else if (kind == 4) {
+            uint16_t val = 0;
+            val = value.toInt();
+            internal_update(key, float(val));
+
+        } else if (kind == 5) {
+            int32_t val = 0;
+            val = value.toInt();
+            internal_update(key, float(val));
+
+        } else if (kind == 6) {
+            uint32_t val = 0;
+            val = value.toInt();
+            internal_update(key, float(val));
+
+        } else if (kind == 7) {
+            float val = 0;
+            val = value.toFloat();
+            internal_update(key, val);
+        }
     }
 }
 
