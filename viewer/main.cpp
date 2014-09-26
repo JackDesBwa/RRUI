@@ -17,6 +17,7 @@
 
 #include <QtGui/QGuiApplication>
 #include <QQmlContext>
+#include <QQuickItem>
 #include <QtQml>
 #include "simplesettings.h"
 #include "rruidata.h"
@@ -36,6 +37,12 @@ int main(int argc, char *argv[])
     viewer.rootContext()->setContextProperty("settings", &settings);
     viewer.setMainQmlFile(QStringLiteral("qml/RRUI/qmlloader.qml"));
     viewer.showExpanded();
+
+    QString path = ".";
+    if (argc == 2) path = argv[1];
+    if (path.right(1) != "/") path += '/';
+    path += "main.qml";
+    viewer.rootObject()->setProperty("source", path);
 
     return app.exec();
 }
