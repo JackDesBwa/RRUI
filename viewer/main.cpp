@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     SimpleSettings settings;
     qmlRegisterType<RRUIData>("RRUI", 1, 0, "RRUIData");
     viewer.rootContext()->setContextProperty("settings", &settings);
-    viewer.setMainQmlFile(QStringLiteral("qml/RRUI/main.qml"));
+    viewer.setMainQmlFile(QStringLiteral("qml/RRUI/qmlloader.qml"));
     viewer.showExpanded();
 
     return app.exec();

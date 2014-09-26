@@ -38,3 +38,6 @@ HEADERS += \
     rruidata.h
 
 QMAKE_CXXFLAGS += -std=c++11
+
+OTHER_FILES += \
+    qml/RRUI/qmlloader.qml
