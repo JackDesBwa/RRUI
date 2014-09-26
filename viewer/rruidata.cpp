@@ -16,6 +16,7 @@
 */
 
 #include <QFile>
+#include <QUrl>
 #include <stdint.h>
 #include "rruidata.h"
 
@@ -95,7 +96,12 @@ void RRUIData::set_messages_file(QString messages_conf) {
     QFile config(messages_conf);
     config.open(QFile::OpenModeFlag::ReadOnly);
     if (!config.isOpen()) {
-        qDebug() << "[RRUIDATA] Configuration file" << messages_conf << "cannot be read";
+        // Hum, try as if messages_conf is a URL
+        config.setFileName(QUrl(messages_conf).toLocalFile());
+        config.open(QFile::OpenModeFlag::ReadOnly);
+    }
+    if (!config.isOpen()) {
+        qDebug() << "[RRUIDATA] Configuration file" << messages_conf << "cannot be read:" << config.errorString();
         return;
     }
 
