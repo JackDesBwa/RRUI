@@ -21,9 +21,10 @@ Loader {
     width: 800
     height: 600
     id: loader
-    source: "main.qml"
     onStatusChanged: {
         if (loader.status == Loader.Error)
             source = "noqml.qml";
+        else if (loader.status == Loader.Ready)
+            console.log("Using " + source);
     }
 }
