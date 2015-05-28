@@ -26,6 +26,7 @@ class RRUIData : public QQmlPropertyMap
 {
     Q_OBJECT
     Q_PROPERTY(enum states connected_state READ get_connected_state NOTIFY connected_state_changed)
+    Q_PROPERTY(bool is_connected READ get_isconnected NOTIFY connected_state_changed)
     Q_ENUMS(states)
 
 public:
@@ -41,6 +42,10 @@ public:
 
     enum states get_connected_state() {
         return state;
+    }
+
+    bool get_isconnected() {
+        return state == STATE_CONNECTED;
     }
 
 signals:
