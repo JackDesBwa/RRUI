@@ -18,6 +18,8 @@
 import QtQuick 2.0
 
 Loader {
+    width: 800
+    height: 600
     id: loader
     source: "main.qml"
     onStatusChanged: {
