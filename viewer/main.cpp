@@ -42,7 +42,11 @@ int main(int argc, char *argv[])
     if (argc == 2) path = argv[1];
     if (path.right(1) != "/") path += '/';
     path += "main.qml";
-    viewer.rootObject()->setProperty("source", path);
+    QFile qmlfile(path);
+    if(qmlfile.exists() || argc == 2)
+        viewer.rootObject()->setProperty("source", path);
+    else
+        viewer.rootObject()->setProperty("source", "qml/RRUI/selector.qml");
 
     return app.exec();
 }

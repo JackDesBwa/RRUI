@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import QtQuick.Dialogs 1.0
+import QtQuick.Controls 1.0
 
 Item {
     FileDialog {
@@ -24,20 +25,34 @@ Item {
         title: qsTr("Open HMI")
         selectFolder: true
         folder: settings.get_string("rrui_qml_dir")
-        onAccepted: {
-            settings.set_string("rrui_qml_dir", dirSelector.fileUrl);
-            loader.source = dirSelector.fileUrl + "/main.qml"
-        }
+        onAccepted: url.text = dirSelector.fileUrl;
     }
-    MouseArea {
+    Flow {
+        spacing: 10
         anchors.fill: parent
-        onClicked: dirSelector.visible = true
-
-        Text {
-            anchors.fill: parent
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-            text: qsTr("Open HMI")
+        anchors.bottomMargin: 10
+        anchors.topMargin: 10
+        anchors.rightMargin: 10
+        anchors.leftMargin: 10
+        flow: Flow.TopToBottom
+        TextField {
+            id: url
+            width: parent.width
+            placeholderText: qsTr("HMI directory or URL")
+            Component.onCompleted: text = settings.get_string("rrui_qml_dir")
+        }
+        Button {
+            width: parent.width
+            text: qsTr("Select with file dialog")
+            onClicked: dirSelector.visible = true
+        }
+        Button {
+            width: parent.width
+            text: qsTr("Load")
+            onClicked: {
+                loader.source = url.text + "/main.qml"
+                settings.set_string("rrui_qml_dir", url.text);
+            }
         }
     }
 }

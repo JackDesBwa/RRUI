@@ -23,8 +23,8 @@ Loader {
     id: loader
     onStatusChanged: {
         if (loader.status == Loader.Error)
-            source = "noqml.qml";
+            source = "selector.qml";
         else if (loader.status == Loader.Ready)
-            console.log("Using " + source);
+            console.log("Loading " + source);
     }
 }

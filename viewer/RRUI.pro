@@ -40,4 +40,5 @@ HEADERS += \
 QMAKE_CXXFLAGS += -std=c++11
 
 OTHER_FILES += \
-    qml/RRUI/qmlloader.qml
+    qml/RRUI/qmlloader.qml \
+    qml/RRUI/selector.qml
