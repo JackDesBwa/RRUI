@@ -24,7 +24,7 @@ Item {
         id: dirSelector
         title: qsTr("Open HMI")
         selectFolder: true
-        folder: settings.get_string("rrui_qml_dir")
+        folder: rrui_settings.get_string("rrui_qml_dir")
         onAccepted: url.text = dirSelector.fileUrl;
     }
     Flow {
@@ -39,7 +39,7 @@ Item {
             id: url
             width: parent.width
             placeholderText: qsTr("HMI directory or URL")
-            Component.onCompleted: text = settings.get_string("rrui_qml_dir")
+            Component.onCompleted: text = rrui_settings.get_string("rrui_qml_dir")
         }
         Button {
             width: parent.width
@@ -51,7 +51,7 @@ Item {
             text: qsTr("Load")
             onClicked: {
                 loader.source = url.text + "/main.qml"
-                settings.set_string("rrui_qml_dir", url.text);
+                rrui_settings.set_string("rrui_qml_dir", url.text);
             }
         }
     }
