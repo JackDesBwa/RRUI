@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     QtQuick2ApplicationViewer viewer;
     SimpleSettings settings;
     qmlRegisterType<RRUIData>("RRUI", 1, 0, "RRUIData");
-    viewer.rootContext()->setContextProperty("settings", &settings);
+    viewer.rootContext()->setContextProperty("rrui_settings", &settings);
     viewer.setMainQmlFile(QStringLiteral("qml/RRUI/qmlloader.qml"));
     viewer.showExpanded();
 
