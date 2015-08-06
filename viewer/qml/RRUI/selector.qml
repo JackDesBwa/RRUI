@@ -50,7 +50,8 @@ Item {
             width: parent.width
             text: qsTr("Load")
             onClicked: {
-                loader.source = url.text + "/main.qml"
+                loader.source = url.text + "/main.qml";
+                rrui_url = url.text;
                 rrui_settings.set_string("rrui_qml_dir", url.text);
             }
         }

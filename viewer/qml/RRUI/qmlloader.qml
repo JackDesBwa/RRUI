@@ -18,9 +18,12 @@
 import QtQuick 2.0
 
 Loader {
+    property string rrui_url: ""
+
     width: 800
     height: 600
     id: loader
+
     onStatusChanged: {
         if (loader.status == Loader.Error)
             source = "selector.qml";
