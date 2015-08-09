@@ -56,6 +56,7 @@ public slots:
     void disconnect();
 
     void set_messages_file(QString messages_conf);
+    void set_messages_string(QString messages_conf);
 
     void rr_get(QString rrname);
     void rr_set(QString rrname, float value);
@@ -82,6 +83,7 @@ private:
     void internal_update(const QString &key, const float value);
     bool send_data(const unsigned char * const data, const int len);
     void send(QString rrname, float value, char action);
+    void parse_line(QString line);
 };
 
 #endif // RRUIDATA_H

@@ -49,31 +49,31 @@ union valuable {
 static valuable float_to_valuable(int kind, float value) {
     valuable ret;
     switch (kind) {
-        case 0:
-            ret.b = (value == 0);
-        case 1:
-            ret.i8 = (int8_t) value;
-            break;
-        case 2:
-            ret.u8 = (uint8_t) value;
-            break;
-        case 3:
-            ret.i16 = (int16_t) value;
-            break;
-        case 4:
-            ret.u16 = (uint16_t) value;
-            break;
-        case 5:
-            ret.i32 = (int32_t) value;
-            break;
-        case 6:
-            ret.u32 = (uint32_t) value;
-            break;
-        case 7:
-            ret.f = value;
-            break;
-        default:
-            ret.i32 = 0;
+    case 0:
+        ret.b = (value == 0);
+    case 1:
+        ret.i8 = (int8_t) value;
+        break;
+    case 2:
+        ret.u8 = (uint8_t) value;
+        break;
+    case 3:
+        ret.i16 = (int16_t) value;
+        break;
+    case 4:
+        ret.u16 = (uint16_t) value;
+        break;
+    case 5:
+        ret.i32 = (int32_t) value;
+        break;
+    case 6:
+        ret.u32 = (uint32_t) value;
+        break;
+    case 7:
+        ret.f = value;
+        break;
+    default:
+        ret.i32 = 0;
     }
     return ret;
 }
@@ -106,106 +106,118 @@ void RRUIData::set_messages_file(QString messages_conf) {
     }
 
     while (!config.atEnd()) {
-        QString a, b, key, value;
-        int kind, number;
+        parse_line(config.readLine());
+    }
+}
 
-        // Read one line
-        QString line = config.readLine().trimmed();
-        if (line.length() == 0) continue;
-        if (line[0] == '#') continue;
+void RRUIData::set_messages_string(QString messages_conf) {
+    map.clear();
+    QTextStream config(&messages_conf);
+    while (!config.atEnd()) {
+        parse_line(config.readLine());
+    }
+}
 
-        // Split at first blank
-        int startpos = line.indexOf(QRegExp("[ \t]"));
-        if (startpos != -1) {
-            a = line.left(startpos);
-            b = line.mid(startpos + 1);
+void RRUIData::parse_line(QString line) {
+    QString a, b, key, value;
+    int kind, number;
+
+    // Read one line
+    line = line.trimmed();
+    if (line.length() == 0) return;
+    if (line[0] == '#') return;
+
+    // Split at first blank
+    int startpos = line.indexOf(QRegExp("[ \t]"));
+    if (startpos != -1) {
+        a = line.left(startpos);
+        b = line.mid(startpos + 1);
+    }
+
+    // Split first part at first dot
+    startpos = a.indexOf(".");
+    if (startpos != -1) {
+        kind = a.left(startpos).toInt();
+        number = a.mid(startpos + 1).toInt();
+        if (kind > 255 || kind < 0) {
+            qDebug("[RRUIDATA] Error, impossible variable kind " + kind);
+            return;
+        } else if (number > 65535 || number < 0) {
+            qDebug("[RRUIDATA] Error, impossible variable number " + number);
+            return;
         }
+    }
 
-        // Split first part at first dot
-        startpos = a.indexOf(".");
-        if (startpos != -1) {
-            kind = a.left(startpos).toInt();
-            number = a.mid(startpos + 1).toInt();
-            if (kind > 255 || kind < 0) {
-                qDebug("[RRUIDATA] Error, impossible variable kind " + kind);
-                continue;
-            } else if (number > 65535 || number < 0) {
-                qDebug("[RRUIDATA] Error, impossible variable number " + number);
-                continue;
-            }
-        }
+    // Split second part at optional equal sign
+    startpos = b.indexOf("=");
+    if (startpos != -1) {
+        key = b.left(startpos);
+        value = b.mid(startpos + 1);
+        int pos2 = value.indexOf(QRegExp("[^ \t]"));
+        if (pos2 != -1) value = value.mid(pos2);
+        pos2 = key.lastIndexOf(QRegExp("[ \t]"));
+        if (pos2 != -1) value = value.left(pos2+1);
+    } else {
+        key = b;
+    }
 
-        // Split second part at optional equal sign
-        startpos = b.indexOf("=");
-        if (startpos != -1) {
-            key = b.left(startpos);
-            value = b.mid(startpos + 1);
-            int pos2 = value.indexOf(QRegExp("[^ \t]"));
-            if (pos2 != -1) value = value.mid(pos2);
-            pos2 = key.lastIndexOf(QRegExp("[ \t]"));
-            if (pos2 != -1) value = value.left(pos2+1);
-        } else {
-            key = b;
-        }
+    // Trim parameter name
+    int pos2 = key.indexOf(QRegExp("[ \t]"));
+    if (pos2 != -1) key = key.mid(pos2);
+    pos2 = key.lastIndexOf(QRegExp("[^ \t]"));
+    if (pos2 != -1) key = key.left(pos2+1);
 
-        // Trim parameter name
-        int pos2 = key.indexOf(QRegExp("[ \t]"));
-        if (pos2 != -1) key = key.mid(pos2);
-        pos2 = key.lastIndexOf(QRegExp("[^ \t]"));
-        if (pos2 != -1) key = key.left(pos2+1);
+    // Verify unicity of parameters
+    auto it = map.find(kind << 16 | number);
+    if (it != map.end()) {
+        qDebug((QString("[RRUIDATA] Error, duplicate id ") + kind + '.' + number +
+                " (first one is " + it.value() + ")").toStdString().c_str());
+        return;
+    }
 
-        // Verify unicity of parameters
-        auto it = map.find(kind << 16 | number);
-        if (it != map.end()) {
-            qDebug((QString("[RRUIDATA] Error, duplicate id ") + kind + '.' + number +
-            " (first one is " + it.value() + ")").toStdString().c_str());
-            continue;
-        }
+    // Record values
+    map.insert(kind << 16 | number, key);
+    if (kind == 0) {
+        bool val = false;
+        if (value.compare("on") == 0) val = true;
+        if (value.compare("1") == 0) val = true;
+        if (value.compare("yes") == 0) val = true;
+        internal_update(key, float(val));
 
-        // Record values
-        map.insert(kind << 16 | number, key);
-        if (kind == 0) {
-            bool val = false;
-            if (value.compare("on") == 0) val = true;
-            if (value.compare("1") == 0) val = true;
-            if (value.compare("yes") == 0) val = true;
-            internal_update(key, float(val));
+    } else if (kind == 1) {
+        int8_t val = 0;
+        val = value.toInt();
+        internal_update(key, float(val));
 
-        } else if (kind == 1) {
-            int8_t val = 0;
-            val = value.toInt();
-            internal_update(key, float(val));
+    } else if (kind == 2) {
+        uint8_t val = 0;
+        val = value.toInt();
+        internal_update(key, float(val));
 
-        } else if (kind == 2) {
-            uint8_t val = 0;
-            val = value.toInt();
-            internal_update(key, float(val));
+    } else if (kind == 3) {
+        int16_t val = 0;
+        val = value.toInt();
+        internal_update(key, float(val));
 
-        } else if (kind == 3) {
-            int16_t val = 0;
-            val = value.toInt();
-            internal_update(key, float(val));
+    } else if (kind == 4) {
+        uint16_t val = 0;
+        val = value.toInt();
+        internal_update(key, float(val));
 
-        } else if (kind == 4) {
-            uint16_t val = 0;
-            val = value.toInt();
-            internal_update(key, float(val));
+    } else if (kind == 5) {
+        int32_t val = 0;
+        val = value.toInt();
+        internal_update(key, float(val));
 
-        } else if (kind == 5) {
-            int32_t val = 0;
-            val = value.toInt();
-            internal_update(key, float(val));
+    } else if (kind == 6) {
+        uint32_t val = 0;
+        val = value.toInt();
+        internal_update(key, float(val));
 
-        } else if (kind == 6) {
-            uint32_t val = 0;
-            val = value.toInt();
-            internal_update(key, float(val));
-
-        } else if (kind == 7) {
-            float val = 0;
-            val = value.toFloat();
-            internal_update(key, val);
-        }
+    } else if (kind == 7) {
+        float val = 0;
+        val = value.toFloat();
+        internal_update(key, val);
     }
 }
 
@@ -254,30 +266,30 @@ void RRUIData::on_ready_to_read() {
         quint32 key = ((quint32) data[i + BYTE_KIND]) << 16 | *((uint16_t*)&data[i + BYTE_NUMBER]);
         float value = 1;
         switch (data[i + BYTE_KIND]) {
-            case 0:
-            case 1:
-                value = (float)(*(int8_t*)&data[i + BYTE_VALUE]);
-                break;
-            case 2:
-                value = (float)(*(uint8_t*)&data[i + BYTE_VALUE]);
-                break;
-            case 3:
-                value = (float)(*(int16_t*)&data[i + BYTE_VALUE]);
-                break;
-            case 4:
-                value = (float)(*(uint16_t*)&data[i + BYTE_VALUE]);
-                break;
-            case 5:
-                value = (float)(*(int32_t*)&data[i + BYTE_VALUE]);
-                break;
-            case 6:
-                value= (float)(*(uint32_t*)&data[i + BYTE_VALUE]);
-                break;
-            case 7:
-                value = *(float*)&data[i + BYTE_VALUE];
-                break;
-            default:
-                value = 0;
+        case 0:
+        case 1:
+            value = (float)(*(int8_t*)&data[i + BYTE_VALUE]);
+            break;
+        case 2:
+            value = (float)(*(uint8_t*)&data[i + BYTE_VALUE]);
+            break;
+        case 3:
+            value = (float)(*(int16_t*)&data[i + BYTE_VALUE]);
+            break;
+        case 4:
+            value = (float)(*(uint16_t*)&data[i + BYTE_VALUE]);
+            break;
+        case 5:
+            value = (float)(*(int32_t*)&data[i + BYTE_VALUE]);
+            break;
+        case 6:
+            value= (float)(*(uint32_t*)&data[i + BYTE_VALUE]);
+            break;
+        case 7:
+            value = *(float*)&data[i + BYTE_VALUE];
+            break;
+        default:
+            value = 0;
         }
         internal_update(map[key], value);
         i += 8;
