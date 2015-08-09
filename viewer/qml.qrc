@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>window.qml</file>
+        <file>selector.qml</file>
+    </qresource>
+</RCC>

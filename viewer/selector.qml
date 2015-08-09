@@ -20,6 +20,7 @@ import QtQuick.Dialogs 1.0
 import QtQuick.Controls 1.0
 
 Item {
+    id: root
     FileDialog {
         id: dirSelector
         title: qsTr("Open HMI")
@@ -55,5 +56,13 @@ Item {
                 rrui_settings.set_string("rrui_qml_dir", url.text);
             }
         }
+    }
+    Button {
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 10
+        text: qsTr("Open new window")
+        onClicked: Qt.createComponent("window.qml").createObject();
     }
 }

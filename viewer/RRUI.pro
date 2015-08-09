@@ -13,25 +13,15 @@
 #    You should have received a copy of the GNU General Public License
 #    along with RRUI.  If not, see <http://www.gnu.org/licenses/>.
 
-# Add more folders to ship with the application, here
-folder_01.source = qml/RRUI
-folder_01.target = qml
-DEPLOYMENTFOLDERS = folder_01
+TEMPLATE = app
 
-# Additional import path used to resolve QML modules in Creator's code model
-QML_IMPORT_PATH =
+QT += qml quick
 
-# The .cpp file which was generated for your project. Feel free to hack it.
 SOURCES += main.cpp \
     simplesettings.cpp \
     rruidata.cpp
 
-# Installation path
-# target.path =
-
-# Please do not modify the following two lines. Required for deployment.
-include(qtquick2applicationviewer/qtquick2applicationviewer.pri)
-qtcAddDeployment()
+RESOURCES += qml.qrc
 
 HEADERS += \
     simplesettings.h \
@@ -39,6 +29,4 @@ HEADERS += \
 
 QMAKE_CXXFLAGS += -std=c++11
 
-OTHER_FILES += \
-    qml/RRUI/qmlloader.qml \
-    qml/RRUI/selector.qml
+include(deployment.pri)

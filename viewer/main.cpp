@@ -16,12 +16,11 @@
 */
 
 #include <QtGui/QGuiApplication>
+#include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QQuickItem>
 #include <QtQml>
 #include "simplesettings.h"
 #include "rruidata.h"
-#include "qtquick2applicationviewer.h"
 
 int main(int argc, char *argv[])
 {
@@ -31,12 +30,11 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("rrui.desbwa.org");
     app.setApplicationName("RR UI");
 
-    QtQuick2ApplicationViewer viewer;
+    QQmlApplicationEngine engine;
     SimpleSettings settings;
     qmlRegisterType<RRUIData>("RRUI", 1, 0, "RRUIData");
-    viewer.rootContext()->setContextProperty("rrui_settings", &settings);
-    viewer.setMainQmlFile(QStringLiteral("qml/RRUI/qmlloader.qml"));
-    viewer.showExpanded();
+    engine.rootContext()->setContextProperty("rrui_settings", &settings);
+    engine.load(QUrl(QStringLiteral("qrc:/window.qml")));
 
     QString path = ".";
     if (argc == 2) path = argv[1];
@@ -44,9 +42,7 @@ int main(int argc, char *argv[])
     path += "main.qml";
     QFile qmlfile(path);
     if(qmlfile.exists() || argc == 2)
-        viewer.rootObject()->setProperty("source", path);
-    else
-        viewer.rootObject()->setProperty("source", "qml/RRUI/selector.qml");
+        engine.rootObjects()[0]->setProperty("source", path);
 
     return app.exec();
 }

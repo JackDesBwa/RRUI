@@ -15,19 +15,28 @@
     along with RRUI.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import QtQuick 2.0
+import QtQuick 2.5
+import QtQuick.Controls 1.0
 
-Loader {
-    property string rrui_url: ""
-
+ApplicationWindow {
     width: 800
     height: 600
-    id: loader
+    visible: true
+    title: "RRUI"
+    Loader {
+        property string rrui_url: ""
 
-    onStatusChanged: {
-        if (loader.status == Loader.Error)
-            source = "selector.qml";
-        else if (loader.status == Loader.Ready)
-            console.log("Loading " + source);
+        id: loader
+        anchors.fill: parent
+        source: "selector.qml";
+
+        Keys.onEscapePressed: source = "qrc:/selector.qml";
+
+        onStatusChanged: {
+            if (loader.status == Loader.Error)
+                source = "selector.qml";
+            else if (loader.status == Loader.Ready)
+                console.log("Loading " + source);
+        }
     }
 }
