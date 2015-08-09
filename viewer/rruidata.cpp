@@ -136,16 +136,18 @@ void RRUIData::parse_line(QString line) {
 
     // Split first part at first dot
     startpos = a.indexOf(".");
-    if (startpos != -1) {
-        kind = a.left(startpos).toInt();
-        number = a.mid(startpos + 1).toInt();
-        if (kind > 255 || kind < 0) {
-            qDebug("[RRUIDATA] Error, impossible variable kind " + kind);
-            return;
-        } else if (number > 65535 || number < 0) {
-            qDebug("[RRUIDATA] Error, impossible variable number " + number);
-            return;
-        }
+    if (startpos == -1) {
+        qDebug(("[RRUIDATA] Error, invalid line " + line).toStdString().c_str());
+        return;
+    }
+    kind = a.left(startpos).toInt();
+    number = a.mid(startpos + 1).toInt();
+    if (kind > 255 || kind < 0) {
+        qDebug("[RRUIDATA] Error, impossible variable kind " + kind);
+        return;
+    } else if (number > 65535 || number < 0) {
+        qDebug("[RRUIDATA] Error, impossible variable number " + number);
+        return;
     }
 
     // Split second part at optional equal sign
