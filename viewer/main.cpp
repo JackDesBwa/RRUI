@@ -40,9 +40,11 @@ int main(int argc, char *argv[])
     if (argc == 2) path = argv[1];
     if (path.right(1) != "/") path += '/';
     path += "main.qml";
-    QFile qmlfile(path);
-    if(qmlfile.exists() || argc == 2)
-        engine.rootObjects()[0]->setProperty("source", path);
+    QFileInfo qmlfile(path);
+    if (qmlfile.exists())
+        path = "file:/" + qmlfile.absoluteFilePath();
+    qDebug(path.toStdString().c_str());
+    engine.rootObjects()[0]->setProperty("rrui_url", path);
 
     return app.exec();
 }

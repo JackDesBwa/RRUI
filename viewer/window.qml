@@ -19,13 +19,16 @@ import QtQuick 2.5
 import QtQuick.Controls 1.0
 
 ApplicationWindow {
+    property string rrui_url: ""
+
     width: 800
     height: 600
     visible: true
     title: "RRUI"
-    Loader {
-        property string rrui_url: ""
 
+    onRrui_urlChanged: loader.source = rrui_url
+
+    Loader {
         id: loader
         anchors.fill: parent
         source: "selector.qml";
