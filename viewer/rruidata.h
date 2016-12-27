@@ -52,7 +52,7 @@ signals:
     void connected_state_changed();
 
 public slots:
-    void connect(QString address, int port);
+    void connect(QString address, quint16 port);
     void disconnect();
 
     void set_messages_file(QString messages_conf);

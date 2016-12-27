@@ -17,6 +17,7 @@
 
 #include <QFile>
 #include <QUrl>
+#include <QDebug>
 #include <stdint.h>
 #include "rruidata.h"
 
@@ -50,24 +51,25 @@ static valuable float_to_valuable(int kind, float value) {
     valuable ret;
     switch (kind) {
     case 0:
-        ret.b = (value == 0);
+        ret.b = (value < 0.0000001f || value > 0.0000001f);
+        break;
     case 1:
-        ret.i8 = (int8_t) value;
+        ret.i8 = static_cast<int8_t>(value);
         break;
     case 2:
-        ret.u8 = (uint8_t) value;
+        ret.u8 = static_cast<uint8_t>(value);
         break;
     case 3:
-        ret.i16 = (int16_t) value;
+        ret.i16 = static_cast<int16_t>(value);
         break;
     case 4:
-        ret.u16 = (uint16_t) value;
+        ret.u16 = static_cast<uint16_t>(value);
         break;
     case 5:
-        ret.i32 = (int32_t) value;
+        ret.i32 = static_cast<int32_t>(value);
         break;
     case 6:
-        ret.u32 = (uint32_t) value;
+        ret.u32 = static_cast<uint32_t>(value);
         break;
     case 7:
         ret.f = value;
@@ -137,16 +139,16 @@ void RRUIData::parse_line(QString line) {
     // Split first part at first dot
     startpos = a.indexOf(".");
     if (startpos == -1) {
-        qDebug(("[RRUIDATA] Error, invalid line " + line).toStdString().c_str());
+        qDebug() << QString("[RRUIDATA] Error, invalid line %1").arg(line);
         return;
     }
     kind = a.left(startpos).toInt();
     number = a.mid(startpos + 1).toInt();
     if (kind > 255 || kind < 0) {
-        qDebug("[RRUIDATA] Error, impossible variable kind " + kind);
+        qDebug() << QString("[RRUIDATA] Error, impossible variable kind %1").arg(kind);
         return;
     } else if (number > 65535 || number < 0) {
-        qDebug("[RRUIDATA] Error, impossible variable number " + number);
+        qDebug() << QString("[RRUIDATA] Error, impossible variable number %1").arg(number);
         return;
     }
 
@@ -170,15 +172,15 @@ void RRUIData::parse_line(QString line) {
     if (pos2 != -1) key = key.left(pos2+1);
 
     // Verify unicity of parameters
-    auto it = map.find(kind << 16 | number);
+    quint32 keynr = static_cast<quint32>(kind) << 16 | static_cast<uint16_t>(number);
+    auto it = map.find(keynr);
     if (it != map.end()) {
-        qDebug((QString("[RRUIDATA] Error, duplicate id ") + kind + '.' + number +
-                " (first one is " + it.value() + ")").toStdString().c_str());
+        qDebug() << QString("[RRUIDATA] Error, duplicate id %1.%2 (first one is %3)").arg(kind).arg(number).arg(it.value());
         return;
     }
 
     // Record values
-    map.insert(kind << 16 | number, key);
+    map.insert(keynr, key);
     if (kind == 0) {
         bool val = false;
         if (value.compare("on") == 0) val = true;
@@ -187,34 +189,22 @@ void RRUIData::parse_line(QString line) {
         internal_update(key, float(val));
 
     } else if (kind == 1) {
-        int8_t val = 0;
-        val = value.toInt();
-        internal_update(key, float(val));
+        internal_update(key, static_cast<float>(static_cast<int8_t>(value.toInt())));
 
     } else if (kind == 2) {
-        uint8_t val = 0;
-        val = value.toInt();
-        internal_update(key, float(val));
+        internal_update(key, static_cast<float>(static_cast<uint8_t>(value.toInt())));
 
     } else if (kind == 3) {
-        int16_t val = 0;
-        val = value.toInt();
-        internal_update(key, float(val));
+        internal_update(key, static_cast<float>(static_cast<int16_t>(value.toInt())));
 
     } else if (kind == 4) {
-        uint16_t val = 0;
-        val = value.toInt();
-        internal_update(key, float(val));
+        internal_update(key, static_cast<float>(static_cast<uint16_t>(value.toInt())));
 
     } else if (kind == 5) {
-        int32_t val = 0;
-        val = value.toInt();
-        internal_update(key, float(val));
+        internal_update(key, static_cast<float>(static_cast<int32_t>(value.toInt())));
 
     } else if (kind == 6) {
-        uint32_t val = 0;
-        val = value.toInt();
-        internal_update(key, float(val));
+        internal_update(key, static_cast<float>(static_cast<uint32_t>(value.toInt())));
 
     } else if (kind == 7) {
         float val = 0;
@@ -231,15 +221,14 @@ void RRUIData::internal_update(const QString &key, const float value) {
 
 QVariant RRUIData::updateValue(const QString &key, const QVariant &input) {
     if (!internal_update_flag) {
-        QString msg = "Trying to modify " + key + " value to " + input.toString() + " from QML. Please use set or force functions";
-        qWarning(msg.toStdString().c_str());
+        qWarning() << QString("Trying to modify %1 value to %2 from QML. Please use set or force functions").arg(key).arg(input.toString());
         return value(key);
     }
     return input;
 }
 
 bool RRUIData::send_data(const unsigned char * const data, const int len) {
-    return s.write((char*) data, len) == len;
+    return s.write(reinterpret_cast<const char*>(data), len) == len;
 }
 
 void RRUIData::on_connected() {
@@ -265,30 +254,30 @@ void RRUIData::on_ready_to_read() {
     int i = 0;
     qint64 readlen = s.read(data, sizeof(data));
     while (i + 7 < readlen) {
-        quint32 key = ((quint32) data[i + BYTE_KIND]) << 16 | *((uint16_t*)&data[i + BYTE_NUMBER]);
+        quint32 key = static_cast<quint32>(data[i + BYTE_KIND]) << 16 | *reinterpret_cast<uint16_t*>(&data[i + BYTE_NUMBER]);
         float value = 1;
         switch (data[i + BYTE_KIND]) {
         case 0:
         case 1:
-            value = (float)(*(int8_t*)&data[i + BYTE_VALUE]);
+            value = static_cast<float>(*reinterpret_cast<int8_t*>(&data[i + BYTE_VALUE]));
             break;
         case 2:
-            value = (float)(*(uint8_t*)&data[i + BYTE_VALUE]);
+            value = static_cast<float>(*reinterpret_cast<uint8_t*>(&data[i + BYTE_VALUE]));
             break;
         case 3:
-            value = (float)(*(int16_t*)&data[i + BYTE_VALUE]);
+            value = static_cast<float>(*reinterpret_cast<int16_t*>(&data[i + BYTE_VALUE]));
             break;
         case 4:
-            value = (float)(*(uint16_t*)&data[i + BYTE_VALUE]);
+            value = static_cast<float>(*reinterpret_cast<uint16_t*>(&data[i + BYTE_VALUE]));
             break;
         case 5:
-            value = (float)(*(int32_t*)&data[i + BYTE_VALUE]);
+            value = static_cast<float>(*reinterpret_cast<int32_t*>(&data[i + BYTE_VALUE]));
             break;
         case 6:
-            value= (float)(*(uint32_t*)&data[i + BYTE_VALUE]);
+            value= static_cast<float>(*reinterpret_cast<uint32_t*>(&data[i + BYTE_VALUE]));
             break;
         case 7:
-            value = *(float*)&data[i + BYTE_VALUE];
+            value = *reinterpret_cast<float*>(&data[i + BYTE_VALUE]);
             break;
         default:
             value = 0;
@@ -298,10 +287,9 @@ void RRUIData::on_ready_to_read() {
     }
 }
 
-void RRUIData::connect(QString address, int port) {
+void RRUIData::connect(QString address, quint16 port) {
     if (state != STATE_CONNECTED) {
-        QString msg = "Connect to " + address + ":" + QString::number(port);
-        qDebug(msg.toStdString().c_str());
+        qDebug() << QString("Connect to %1:%2").arg(address).arg(port);
         s.connectToHost(address, port);
         state = STATE_CONNECTING;
         emit connected_state_changed();
@@ -315,29 +303,29 @@ void RRUIData::disconnect() {
 }
 
 void RRUIData::send(QString rrname, float value, char action) {
-    quint8 kind;
-    quint16 number;
+    quint8 kind = 0;
+    quint16 number = 0;
     auto it = map.constBegin();
     for (; it != map.constEnd(); ++it) {
         if (it.value().compare(rrname) == 0) {
-            kind = it.key() >> 16;
-            number = it.key();
+            kind = static_cast<quint8>(it.key() >> 16);
+            number = static_cast<quint16>(it.key());
             break;
         }
     }
     if (it == map.constEnd()) {
-        qWarning((rrname + " not found").toStdString().c_str());
+        qWarning() << QString("%1 not found").arg(rrname);
         return;
     }
 
     char msg[8];
-    msg[BYTE_KIND] = kind;
+    msg[BYTE_KIND] = static_cast<char>(kind);
     msg[BYTE_ACTION] = action;
-    *((quint16*)&msg[BYTE_NUMBER]) = number;
+    *reinterpret_cast<quint16*>(&msg[BYTE_NUMBER]) = number;
     if (action == ACTION_EXPORT)
-        *((quint32*)&msg[BYTE_VALUE]) = (quint32) value;
+        *reinterpret_cast<quint32*>(&msg[BYTE_VALUE]) = static_cast<quint32>(value);
     else
-        *((valuable*)&msg[BYTE_VALUE]) = float_to_valuable(kind, value);
+        *reinterpret_cast<valuable*>(&msg[BYTE_VALUE]) = float_to_valuable(kind, value);
 
     s.write(msg, 8);
 }
