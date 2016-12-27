@@ -28,14 +28,11 @@ Item {
         folder: rrui_settings.get_string("rrui_qml_dir")
         onAccepted: url.text = dirSelector.fileUrl;
     }
-    Flow {
-        spacing: 10
+    Column {
         anchors.fill: parent
-        anchors.bottomMargin: 10
-        anchors.topMargin: 10
-        anchors.rightMargin: 10
-        anchors.leftMargin: 10
-        flow: Flow.TopToBottom
+        anchors.margins: 10
+        spacing: 10
+
         TextField {
             id: url
             width: parent.width
