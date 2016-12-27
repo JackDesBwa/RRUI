@@ -26,20 +26,20 @@ ApplicationWindow {
     visible: true
     title: "RRUI"
 
-    onRrui_urlChanged: loader.source = rrui_url
-
     Loader {
         id: loader
         anchors.fill: parent
-        source: "selector.qml";
+        source: rrui_url ? rrui_url : "qrc:/selector.qml";
 
-        Keys.onEscapePressed: source = "qrc:/selector.qml";
+        Keys.onEscapePressed: rrui_url = "";
 
         onStatusChanged: {
-            if (loader.status == Loader.Error)
-                source = "selector.qml";
-            else if (loader.status == Loader.Ready)
-                console.log("Loading " + source);
+            if (loader.status == Loader.Error) {
+                rrui_url = "";
+                console.log("Cannot load " + source);
+            } else if (loader.status == Loader.Ready) {
+                console.log("Loaded " + source);
+            }
         }
     }
 }
