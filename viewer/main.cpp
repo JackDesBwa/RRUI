@@ -41,10 +41,10 @@ int main(int argc, char *argv[])
     if (path.right(1) != "/") path += '/';
     path += "main.qml";
     QFileInfo qmlfile(path);
-    if (qmlfile.exists())
+    if (qmlfile.exists()) {
         path = "file:/" + qmlfile.absoluteFilePath();
-    qDebug(path.toStdString().c_str());
-    engine.rootObjects()[0]->setProperty("rrui_url", path);
+        engine.rootObjects()[0]->setProperty("rrui_url", path);
+    }
 
     return app.exec();
 }
