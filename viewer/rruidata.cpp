@@ -51,7 +51,7 @@ static valuable float_to_valuable(int kind, float value) {
     valuable ret;
     switch (kind) {
     case 0:
-        ret.b = (value < 0.0000001f || value > 0.0000001f);
+        ret.b = (value < -0.0000001f || value > 0.0000001f);
         break;
     case 1:
         ret.i8 = static_cast<int8_t>(value);
