@@ -45,6 +45,8 @@ int main(int argc, char *argv[])
         path = "file:/" + qmlfile.absoluteFilePath();
         engine.rootObjects()[0]->setProperty("rrui_url", path);
     }
+    if (path.startsWith("http://") || path.startsWith("https://"))
+        engine.rootObjects()[0]->setProperty("rrui_url", path);
 
     return app.exec();
 }
