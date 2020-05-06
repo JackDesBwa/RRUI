@@ -21,8 +21,8 @@ import QtQuick.Controls 1.0
 ApplicationWindow {
     property string rrui_url: ""
 
-    width: 800
-    height: 600
+    width: loader.item && loader.item.implicitWidth || 800
+    height: loader.item && loader.item.implicitHeight || 600
     visible: true
     title: "RRUI"
 
